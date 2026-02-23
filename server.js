@@ -50,9 +50,9 @@ const server = http.createServer((req, res) => {
   // ===== API: serve config to frontend =====
   if (req.url === '/api/config') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({
-      apiKey: env.GEMINI_API_KEY || null,
-    }));
+    // Check process.env first (Cloud Run), then .env file
+    const apiKey = process.env.GEMINI_API_KEY || env.GEMINI_API_KEY || null;
+    res.end(JSON.stringify({ apiKey }));
     return;
   }
 
