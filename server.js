@@ -56,6 +56,22 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // ===== Share pages: /s/:id =====
+  const shareMatch = req.url.match(/^\/s\/([a-zA-Z0-9]+)$/);
+  if (shareMatch) {
+    const sharePath = path.join(__dirname, 'share.html');
+    fs.readFile(sharePath, (err, data) => {
+      if (err) {
+        res.writeHead(404, { 'Content-Type': 'text/plain' });
+        res.end('Share page not found');
+        return;
+      }
+      res.writeHead(200, { 'Content-Type': 'text/html' });
+      res.end(data);
+    });
+    return;
+  }
+
   // ===== Static files =====
   let urlPath = req.url.split('?')[0]; // strip query params
   if (urlPath === '/') urlPath = '/index.html';

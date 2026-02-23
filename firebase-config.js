@@ -183,7 +183,7 @@ async function uploadShareImage(imageDataUrl, metadata = {}) {
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
     
-    const shareUrl = `${getShareUrl()}/share/${shareDoc.id}`;
+    const shareUrl = `${getShareUrl()}/s/${shareDoc.id}`;
     
     return {
       shareId: shareDoc.id,

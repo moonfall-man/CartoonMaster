@@ -697,6 +697,8 @@ function generateShareImage() {
   });
 }
 
+let currentShareUrl = null;
+
 async function showShareModal() {
   if (!els.resultImage.src || els.resultImage.style.display === 'none') {
     showToast('Generate a masterpiece first!');
@@ -709,7 +711,43 @@ async function showShareModal() {
   
   // Generate the combined image
   currentShareImage = await generateShareImage();
-  els.sharePreview.innerHTML = `<img src="${currentShareImage}" alt="Share preview">`;
+  
+  // Check if user is logged in for cloud sharing
+  if (typeof currentUser !== 'undefined' && currentUser) {
+    els.sharePreview.innerHTML = `
+      <img src="${currentShareImage}" alt="Share preview">
+      <div class="share-uploading">Uploading to cloud...</div>
+    `;
+    
+    // Upload to Firebase and get shareable link
+    const shareResult = await uploadShareImage(currentShareImage, {
+      prompt: els.promptInput.value || '',
+      style: state.selectedStyle || ''
+    });
+    
+    if (shareResult) {
+      currentShareUrl = shareResult.shareUrl;
+      els.sharePreview.innerHTML = `
+        <img src="${currentShareImage}" alt="Share preview">
+        <div class="share-link-container">
+          <input type="text" class="share-link-input" value="${currentShareUrl}" readonly id="shareLinkInput">
+          <button class="copy-link-btn" id="copyLinkBtn" title="Copy link">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          </button>
+        </div>
+      `;
+      
+      // Add copy link listener
+      document.getElementById('copyLinkBtn')?.addEventListener('click', copyShareLink);
+    } else {
+      els.sharePreview.innerHTML = `<img src="${currentShareImage}" alt="Share preview">`;
+    }
+  } else {
+    els.sharePreview.innerHTML = `
+      <img src="${currentShareImage}" alt="Share preview">
+      <p class="share-signin-hint">Sign in to get a shareable link!</p>
+    `;
+  }
   
   // Show/hide native share button based on support
   if (navigator.share && navigator.canShare) {
@@ -722,6 +760,14 @@ async function showShareModal() {
 function hideShareModal() {
   els.shareModal.classList.remove('active');
   currentShareImage = null;
+  currentShareUrl = null;
+}
+
+function copyShareLink() {
+  if (!currentShareUrl) return;
+  navigator.clipboard.writeText(currentShareUrl)
+    .then(() => showToast('Link copied!', 'success'))
+    .catch(() => showToast('Failed to copy link'));
 }
 
 function downloadShareImage() {
@@ -749,7 +795,7 @@ async function copyShareImage() {
 
 function shareToTwitter() {
   const text = encodeURIComponent('Check out my AI-generated masterpiece! ✨🎨 Made with Sketch to Masterpiece');
-  const url = encodeURIComponent(getShareUrl());
+  const url = encodeURIComponent(currentShareUrl || getShareUrl());
   window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank');
 }
 
@@ -770,7 +816,7 @@ async function nativeShare() {
       await navigator.share({
         title: 'Sketch to Masterpiece',
         text: 'Check out my AI-generated masterpiece! ✨🎨',
-        url: getShareUrl()
+        url: currentShareUrl || getShareUrl()
       });
     }
   } catch (err) {

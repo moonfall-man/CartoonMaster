@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shared Creation - Sketch to Masterpiece</title>
+  <meta name="description" content="Check out this AI-generated masterpiece!">
+  
+  <!-- Dynamic OG tags will be set by JavaScript -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="AI Masterpiece - Sketch to Masterpiece" id="ogTitle">
+  <meta property="og:description" content="Check out this AI-generated artwork!" id="ogDescription">
+  <meta property="og:image" content="" id="ogImage">
+  
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="AI Masterpiece - Sketch to Masterpiece" id="twitterTitle">
+  <meta name="twitter:description" content="Check out this AI-generated artwork!" id="twitterDescription">
+  <meta name="twitter:image" content="" id="twitterImage">
+  
+  <link rel="stylesheet" href="/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    .share-page {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+      background: var(--bg-primary);
+    }
+    
+    .share-container {
+      max-width: 800px;
+      width: 100%;
+      text-align: center;
+    }
+    
+    .share-header {
+      margin-bottom: 32px;
+    }
+    
+    .share-header h1 {
+      font-size: 2rem;
+      margin-bottom: 8px;
+      background: var(--accent-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .share-header p {
+      color: var(--text-secondary);
+    }
+    
+    .share-image-container {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 24px;
+      margin-bottom: 32px;
+    }
+    
+    .share-image {
+      max-width: 100%;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+    }
+    
+    .share-prompt {
+      margin-top: 16px;
+      padding: 12px 20px;
+      background: var(--bg-tertiary);
+      border-radius: var(--radius-md);
+      color: var(--text-secondary);
+      font-style: italic;
+    }
+    
+    .share-meta {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      margin-top: 16px;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+    
+    .share-cta {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+    
+    .share-cta p {
+      color: var(--text-secondary);
+    }
+    
+    .try-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 16px 32px;
+      background: var(--accent-gradient);
+      border: none;
+      border-radius: var(--radius-lg);
+      color: white;
+      font-family: var(--font-body);
+      font-size: 1.1rem;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+    
+    .try-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-glow);
+    }
+    
+    .share-loading {
+      padding: 60px;
+      color: var(--text-muted);
+    }
+    
+    .share-error {
+      padding: 60px;
+      color: var(--text-muted);
+    }
+    
+    .share-error h2 {
+      color: var(--text-primary);
+      margin-bottom: 12px;
+    }
+    
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 20px;
+      color: var(--accent);
+      text-decoration: none;
+    }
+    
+    .back-link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="share-page">
+    <div class="share-container">
+      <div class="share-header">
+        <a href="/" style="text-decoration: none;">
+          <h1>✨ Sketch to Masterpiece</h1>
+        </a>
+        <p>AI-Generated Artwork</p>
+      </div>
+      
+      <div id="shareContent">
+        <div class="share-loading">
+          <p>Loading creation...</p>
+        </div>
+      </div>
+      
+      <div class="share-cta">
+        <p>Want to create your own masterpiece?</p>
+        <a href="/" class="try-btn">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6L5.6 18.4"/></svg>
+          Try It Free
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+  
+  <script>
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyDx_MqAkpTHKGvov0A5QFtOGPtF7dmh-5I",
+      authDomain: "cartoon-master-app.firebaseapp.com",
+      projectId: "cartoon-master-app",
+      storageBucket: "cartoon-master-app.firebasestorage.app",
+      messagingSenderId: "49423499970",
+      appId: "1:49423499970:web:adae705375ee86dc66715b"
+    };
+    
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    
+    async function loadShare() {
+      const shareContent = document.getElementById('shareContent');
+      
+      // Get share ID from URL path
+      const pathParts = window.location.pathname.split('/');
+      const shareId = pathParts[pathParts.length - 1];
+      
+      if (!shareId) {
+        showError('No share ID provided');
+        return;
+      }
+      
+      try {
+        const doc = await db.collection('shares').doc(shareId).get();
+        
+        if (!doc.exists) {
+          showError('This creation was not found or has been removed.');
+          return;
+        }
+        
+        const data = doc.data();
+        displayShare(data);
+        
+        // Update OG tags dynamically (won't help crawlers but good for JS-based sharing)
+        if (data.imageUrl) {
+          document.getElementById('ogImage').content = data.imageUrl;
+          document.getElementById('twitterImage').content = data.imageUrl;
+        }
+        if (data.prompt) {
+          const desc = `"${data.prompt}" - Created with Sketch to Masterpiece`;
+          document.getElementById('ogDescription').content = desc;
+          document.getElementById('twitterDescription').content = desc;
+        }
+        
+      } catch (err) {
+        console.error('Error loading share:', err);
+        showError('Failed to load this creation.');
+      }
+    }
+    
+    function displayShare(data) {
+      const shareContent = document.getElementById('shareContent');
+      const createdAt = data.createdAt?.toDate?.() || new Date();
+      const dateStr = createdAt.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric', 
+        year: 'numeric' 
+      });
+      
+      shareContent.innerHTML = `
+        <div class="share-image-container">
+          <img src="${data.imageUrl}" alt="AI Generated Masterpiece" class="share-image">
+          ${data.prompt ? `<div class="share-prompt">"${data.prompt}"</div>` : ''}
+          <div class="share-meta">
+            ${data.style ? `<span>Style: ${data.style}</span>` : ''}
+            <span>Created ${dateStr}</span>
+          </div>
+        </div>
+      `;
+    }
+    
+    function showError(message) {
+      const shareContent = document.getElementById('shareContent');
+      shareContent.innerHTML = `
+        <div class="share-error">
+          <h2>Oops!</h2>
+          <p>${message}</p>
+          <a href="/" class="back-link">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            Go to homepage
+          </a>
+        </div>
+      `;
+    }
+    
+    // Load on page ready
+    loadShare();
+  </script>
+</body>
+</html>
