@@ -565,10 +565,20 @@ async function renderHistoryGrid() {
   
   els.historyGrid.innerHTML = historyItems.map(entry => `
     <div class="history-item" data-id="${entry.id}" data-cloud="${entry.isCloud || false}">
-      <img src="${entry.result}" alt="Generated artwork" loading="lazy">
-      <div class="history-item-overlay">
+      <div class="history-item-images">
+        <div class="history-sketch">
+          <img src="${entry.sketch}" alt="Sketch" loading="lazy">
+          <span class="history-label">Sketch</span>
+        </div>
+        <div class="history-arrow">→</div>
+        <div class="history-result">
+          <img src="${entry.result}" alt="Masterpiece" loading="lazy">
+          <span class="history-label">Masterpiece</span>
+        </div>
+      </div>
+      <div class="history-item-info">
         <span class="history-date">${new Date(entry.timestamp).toLocaleDateString()}</span>
-        ${entry.prompt ? `<span class="history-prompt">${entry.prompt}</span>` : ''}
+        ${entry.prompt ? `<span class="history-prompt">"${entry.prompt}"</span>` : ''}
       </div>
     </div>
   `).join('');
@@ -697,13 +707,23 @@ function downloadResult() {
 let currentShareImage = null;
 
 function generateShareImage() {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const sketchDataUrl = canvas.toDataURL('image/png');
     const resultDataUrl = els.resultImage.src;
     
     const sketchImg = new Image();
     const resultImg = new Image();
+    sketchImg.crossOrigin = 'anonymous';
+    resultImg.crossOrigin = 'anonymous';
     let loaded = 0;
+    
+    const handleError = (err) => {
+      console.error('Image load error:', err);
+      reject(new Error('Failed to load images for sharing'));
+    };
+    
+    sketchImg.onerror = handleError;
+    resultImg.onerror = handleError;
     
     const checkLoaded = () => {
       loaded++;
@@ -772,7 +792,13 @@ async function showShareModal() {
   els.sharePreview.innerHTML = '<div class="share-loading">Generating preview...</div>';
   
   // Generate the combined image
-  currentShareImage = await generateShareImage();
+  try {
+    currentShareImage = await generateShareImage();
+  } catch (err) {
+    console.error('Share image generation failed:', err);
+    els.sharePreview.innerHTML = '<p class="share-error">Failed to generate preview. Please try again.</p>';
+    return;
+  }
   
   // Check if user is logged in for cloud sharing
   if (typeof currentUser !== 'undefined' && currentUser) {
