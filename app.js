@@ -475,12 +475,28 @@ function saveToGenerationHistory(sketchDataUrl, resultDataUrl, prompt) {
   
   state.generationHistory.unshift(entry);
   
-  // Keep only last 20 entries
-  if (state.generationHistory.length > 20) {
-    state.generationHistory = state.generationHistory.slice(0, 20);
+  // Keep only last 10 entries to avoid localStorage quota issues
+  if (state.generationHistory.length > 10) {
+    state.generationHistory = state.generationHistory.slice(0, 10);
   }
   
-  localStorage.setItem('generation_history', JSON.stringify(state.generationHistory));
+  // Try to save, with fallback cleanup if quota exceeded
+  try {
+    localStorage.setItem('generation_history', JSON.stringify(state.generationHistory));
+  } catch (e) {
+    if (e.name === 'QuotaExceededError') {
+      // Clear old entries and try again
+      state.generationHistory = state.generationHistory.slice(0, 5);
+      try {
+        localStorage.setItem('generation_history', JSON.stringify(state.generationHistory));
+      } catch (e2) {
+        // Last resort: clear all history
+        state.generationHistory = [entry];
+        localStorage.setItem('generation_history', JSON.stringify(state.generationHistory));
+        console.warn('Cleared old history due to storage quota');
+      }
+    }
+  }
 }
 
 function showHistoryModal() {
