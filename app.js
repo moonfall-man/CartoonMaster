@@ -22,6 +22,12 @@ const state = {
 // Gemini model to use — gemini-2.5-flash-image is the stable image gen model
 const GEMINI_MODEL = 'gemini-2.5-flash-image';
 
+// Production URL for sharing
+const PRODUCTION_URL = 'https://cartoon-master-ucztfostta-uc.a.run.app';
+const getShareUrl = () => window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+  ? PRODUCTION_URL 
+  : window.location.origin;
+
 // ===== DOM Elements =====
 const $ = (sel) => document.querySelector(sel);
 const canvas = $('#drawingCanvas');
@@ -743,7 +749,7 @@ async function copyShareImage() {
 
 function shareToTwitter() {
   const text = encodeURIComponent('Check out my AI-generated masterpiece! ✨🎨 Made with Sketch to Masterpiece');
-  const url = encodeURIComponent(window.location.href);
+  const url = encodeURIComponent(getShareUrl());
   window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank');
 }
 
@@ -764,7 +770,7 @@ async function nativeShare() {
       await navigator.share({
         title: 'Sketch to Masterpiece',
         text: 'Check out my AI-generated masterpiece! ✨🎨',
-        url: window.location.href
+        url: getShareUrl()
       });
     }
   } catch (err) {

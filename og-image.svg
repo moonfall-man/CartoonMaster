@@ -1,0 +1,54 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="630" fill="#0a0a0f"/>
+  
+  <!-- Gradient background accent -->
+  <defs>
+    <linearGradient id="grad" x1="0" y1="0" x2="1200" y2="630">
+      <stop offset="0%" stop-color="#8B5CF6" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#EC4899" stop-opacity="0.15"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#grad)"/>
+  
+  <!-- Logo icon -->
+  <rect x="100" y="240" width="80" height="80" rx="16" fill="url(#logoGrad)"/>
+  <defs>
+    <linearGradient id="logoGrad" x1="100" y1="240" x2="180" y2="320">
+      <stop stop-color="#8B5CF6"/>
+      <stop offset="1" stop-color="#EC4899"/>
+    </linearGradient>
+  </defs>
+  <path d="M124 300L132 272L140 288L148 280L156 300" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="140" cy="264" r="4" fill="white"/>
+  
+  <!-- Title -->
+  <text x="200" y="275" font-family="system-ui, -apple-system, sans-serif" font-size="48" font-weight="700" fill="white">Sketch to Masterpiece</text>
+  <text x="200" y="315" font-family="system-ui, -apple-system, sans-serif" font-size="24" fill="#9898b0">Draw anything. Let AI transform it into art.</text>
+  
+  <!-- Sketch box -->
+  <rect x="100" y="380" width="200" height="150" rx="12" fill="#16161f" stroke="#2a2a3e" stroke-width="2"/>
+  <text x="200" y="465" font-family="system-ui, sans-serif" font-size="14" fill="#5a5a78" text-anchor="middle">Your Sketch</text>
+  <path d="M140 420 L180 450 L220 430 L260 460" stroke="#8B5CF6" stroke-width="3" stroke-linecap="round" fill="none"/>
+  
+  <!-- Arrow -->
+  <text x="370" y="460" font-family="system-ui, sans-serif" font-size="40" fill="#8B5CF6">→</text>
+  
+  <!-- Masterpiece box -->
+  <rect x="440" y="380" width="200" height="150" rx="12" fill="#16161f" stroke="#2a2a3e" stroke-width="2"/>
+  <text x="540" y="465" font-family="system-ui, sans-serif" font-size="14" fill="#5a5a78" text-anchor="middle">Masterpiece</text>
+  <defs>
+    <linearGradient id="artGrad" x1="440" y1="380" x2="640" y2="530">
+      <stop offset="0%" stop-color="#8B5CF6"/>
+      <stop offset="50%" stop-color="#EC4899"/>
+      <stop offset="100%" stop-color="#3B82F6"/>
+    </linearGradient>
+  </defs>
+  <rect x="460" y="400" width="160" height="100" rx="8" fill="url(#artGrad)" opacity="0.6"/>
+  
+  <!-- Sparkles -->
+  <text x="680" y="420" font-size="32">✨</text>
+  <text x="720" y="480" font-size="24">🎨</text>
+  
+  <!-- URL -->
+  <text x="1100" y="590" font-family="system-ui, sans-serif" font-size="16" fill="#5a5a78" text-anchor="end">cartoon-master-ucztfostta-uc.a.run.app</text>
+</svg>
