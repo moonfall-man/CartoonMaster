@@ -52,6 +52,14 @@ const els = {
   historyModal: $('#historyModal'),
   historyGrid: $('#historyGrid'),
   closeHistory: $('#closeHistory'),
+  shareBtn: $('#shareBtn'),
+  shareModal: $('#shareModal'),
+  sharePreview: $('#sharePreview'),
+  closeShare: $('#closeShare'),
+  downloadShareBtn: $('#downloadShareBtn'),
+  copyShareBtn: $('#copyShareBtn'),
+  twitterShareBtn: $('#twitterShareBtn'),
+  nativeShareBtn: $('#nativeShareBtn'),
   resultImage: $('#resultImage'),
   resultPlaceholder: $('#resultPlaceholder'),
   resultDescription: $('#resultDescription'),
@@ -422,6 +430,7 @@ async function generateMasterpiece() {
     els.resultImage.style.display = 'block';
     els.resultPlaceholder.style.display = 'none';
     els.downloadBtn.style.display = 'flex';
+    if (els.shareBtn) els.shareBtn.style.display = 'flex';
 
     if (description) {
       els.resultDescription.textContent = description;
@@ -506,6 +515,7 @@ function renderHistoryGrid() {
         els.resultImage.style.display = 'block';
         els.resultPlaceholder.style.display = 'none';
         els.downloadBtn.style.display = 'flex';
+        if (els.shareBtn) els.shareBtn.style.display = 'flex';
         hideHistoryModal();
       }
     });
@@ -612,6 +622,155 @@ function downloadResult() {
   link.click();
 }
 
+// ===== Share Feature =====
+let currentShareImage = null;
+
+function generateShareImage() {
+  return new Promise((resolve) => {
+    const sketchDataUrl = canvas.toDataURL('image/png');
+    const resultDataUrl = els.resultImage.src;
+    
+    const sketchImg = new Image();
+    const resultImg = new Image();
+    let loaded = 0;
+    
+    const checkLoaded = () => {
+      loaded++;
+      if (loaded === 2) {
+        // Create combined canvas
+        const padding = 20;
+        const labelHeight = 40;
+        const imgSize = 400;
+        const totalWidth = imgSize * 2 + padding * 3;
+        const totalHeight = imgSize + padding * 2 + labelHeight;
+        
+        const shareCanvas = document.createElement('canvas');
+        shareCanvas.width = totalWidth;
+        shareCanvas.height = totalHeight;
+        const ctx = shareCanvas.getContext('2d');
+        
+        // Background
+        ctx.fillStyle = '#0a0a0f';
+        ctx.fillRect(0, 0, totalWidth, totalHeight);
+        
+        // Draw sketch
+        ctx.drawImage(sketchImg, padding, padding, imgSize, imgSize);
+        
+        // Draw result
+        ctx.drawImage(resultImg, imgSize + padding * 2, padding, imgSize, imgSize);
+        
+        // Labels
+        ctx.fillStyle = '#9898b0';
+        ctx.font = '16px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Sketch', padding + imgSize / 2, imgSize + padding + 28);
+        ctx.fillText('Masterpiece', imgSize + padding * 2 + imgSize / 2, imgSize + padding + 28);
+        
+        // Arrow
+        ctx.fillStyle = '#8B5CF6';
+        ctx.font = '24px sans-serif';
+        ctx.fillText('→', totalWidth / 2, imgSize / 2 + padding);
+        
+        // Branding
+        ctx.fillStyle = '#5a5a78';
+        ctx.font = '12px Inter, sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText('Made with Sketch to Masterpiece', totalWidth - padding, totalHeight - 8);
+        
+        resolve(shareCanvas.toDataURL('image/png'));
+      }
+    };
+    
+    sketchImg.onload = checkLoaded;
+    resultImg.onload = checkLoaded;
+    sketchImg.src = sketchDataUrl;
+    resultImg.src = resultDataUrl;
+  });
+}
+
+async function showShareModal() {
+  if (!els.resultImage.src || els.resultImage.style.display === 'none') {
+    showToast('Generate a masterpiece first!');
+    return;
+  }
+  
+  // Show modal with loading state
+  els.shareModal.classList.add('active');
+  els.sharePreview.innerHTML = '<div class="share-loading">Generating preview...</div>';
+  
+  // Generate the combined image
+  currentShareImage = await generateShareImage();
+  els.sharePreview.innerHTML = `<img src="${currentShareImage}" alt="Share preview">`;
+  
+  // Show/hide native share button based on support
+  if (navigator.share && navigator.canShare) {
+    els.nativeShareBtn.style.display = 'flex';
+  } else {
+    els.nativeShareBtn.style.display = 'none';
+  }
+}
+
+function hideShareModal() {
+  els.shareModal.classList.remove('active');
+  currentShareImage = null;
+}
+
+function downloadShareImage() {
+  if (!currentShareImage) return;
+  const link = document.createElement('a');
+  link.download = `sketch-to-masterpiece-${Date.now()}.png`;
+  link.href = currentShareImage;
+  link.click();
+  showToast('Image downloaded!', 'success');
+}
+
+async function copyShareImage() {
+  if (!currentShareImage) return;
+  try {
+    const response = await fetch(currentShareImage);
+    const blob = await response.blob();
+    await navigator.clipboard.write([
+      new ClipboardItem({ 'image/png': blob })
+    ]);
+    showToast('Copied to clipboard!', 'success');
+  } catch (err) {
+    showToast('Failed to copy. Try downloading instead.');
+  }
+}
+
+function shareToTwitter() {
+  const text = encodeURIComponent('Check out my AI-generated masterpiece! ✨🎨 Made with Sketch to Masterpiece');
+  const url = encodeURIComponent(window.location.href);
+  window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank');
+}
+
+async function nativeShare() {
+  if (!currentShareImage) return;
+  try {
+    const response = await fetch(currentShareImage);
+    const blob = await response.blob();
+    const file = new File([blob], 'masterpiece.png', { type: 'image/png' });
+    
+    if (navigator.canShare({ files: [file] })) {
+      await navigator.share({
+        title: 'Sketch to Masterpiece',
+        text: 'Check out my AI-generated masterpiece! ✨🎨',
+        files: [file]
+      });
+    } else {
+      await navigator.share({
+        title: 'Sketch to Masterpiece',
+        text: 'Check out my AI-generated masterpiece! ✨🎨',
+        url: window.location.href
+      });
+    }
+  } catch (err) {
+    if (err.name !== 'AbortError') {
+      showToast('Sharing failed. Try downloading instead.');
+    }
+  }
+}
+
 // ===== Clear Canvas =====
 function clearCanvas() {
   const rect = els.canvasContainer.getBoundingClientRect();
@@ -685,6 +844,31 @@ function setupEvents() {
     els.historyModal.addEventListener('click', (e) => {
       if (e.target === els.historyModal) hideHistoryModal();
     });
+  }
+
+  // Share Modal
+  if (els.shareBtn) {
+    els.shareBtn.addEventListener('click', showShareModal);
+  }
+  if (els.closeShare) {
+    els.closeShare.addEventListener('click', hideShareModal);
+  }
+  if (els.shareModal) {
+    els.shareModal.addEventListener('click', (e) => {
+      if (e.target === els.shareModal) hideShareModal();
+    });
+  }
+  if (els.downloadShareBtn) {
+    els.downloadShareBtn.addEventListener('click', downloadShareImage);
+  }
+  if (els.copyShareBtn) {
+    els.copyShareBtn.addEventListener('click', copyShareImage);
+  }
+  if (els.twitterShareBtn) {
+    els.twitterShareBtn.addEventListener('click', shareToTwitter);
+  }
+  if (els.nativeShareBtn) {
+    els.nativeShareBtn.addEventListener('click', nativeShare);
   }
 
   // API Key modal
