@@ -464,11 +464,26 @@ async function generateMasterpiece() {
 }
 
 // ===== Generation History =====
-function saveToGenerationHistory(sketchDataUrl, resultDataUrl, prompt) {
+async function saveToGenerationHistory(sketchDataUrl, resultDataUrl, prompt) {
+  // If user is logged in, save to cloud
+  if (typeof currentUser !== 'undefined' && currentUser) {
+    const cloudResult = await saveGenerationToCloud(
+      sketchDataUrl, 
+      resultDataUrl, 
+      prompt, 
+      state.selectedStyle || ''
+    );
+    if (cloudResult) {
+      console.log('Generation saved to cloud');
+      return;
+    }
+  }
+  
+  // Fallback: save to localStorage for guests (with thumbnail)
   const entry = {
     id: Date.now(),
-    sketch: sketchDataUrl,
-    result: resultDataUrl,
+    sketch: createThumbnail(sketchDataUrl),
+    result: createThumbnail(resultDataUrl),
     prompt: prompt || '',
     timestamp: new Date().toISOString(),
   };
@@ -499,11 +514,18 @@ function saveToGenerationHistory(sketchDataUrl, resultDataUrl, prompt) {
   }
 }
 
-function showHistoryModal() {
-  renderHistoryGrid();
+// Create a smaller thumbnail for localStorage
+function createThumbnail(dataUrl) {
+  // For now, return the original - we'll optimize later if needed
+  // A proper implementation would resize to ~200px
+  return dataUrl;
+}
+
+async function showHistoryModal() {
   if (els.historyModal) {
     els.historyModal.classList.add('active');
   }
+  await renderHistoryGrid();
 }
 
 function hideHistoryModal() {
@@ -512,16 +534,37 @@ function hideHistoryModal() {
   }
 }
 
-function renderHistoryGrid() {
+async function renderHistoryGrid() {
   if (!els.historyGrid) return;
   
-  if (state.generationHistory.length === 0) {
+  // Show loading state
+  els.historyGrid.innerHTML = '<p class="history-loading">Loading history...</p>';
+  
+  let historyItems = [];
+  
+  // If logged in, load from cloud
+  if (typeof currentUser !== 'undefined' && currentUser && typeof loadCloudHistory === 'function') {
+    const cloudHistory = await loadCloudHistory();
+    historyItems = cloudHistory.map(entry => ({
+      id: entry.id,
+      sketch: entry.sketchUrl,
+      result: entry.resultUrl,
+      prompt: entry.prompt || '',
+      timestamp: entry.timestamp,
+      isCloud: true
+    }));
+  } else {
+    // Use localStorage history for guests
+    historyItems = state.generationHistory;
+  }
+  
+  if (historyItems.length === 0) {
     els.historyGrid.innerHTML = '<p class="history-empty">No generations yet. Create your first masterpiece!</p>';
     return;
   }
   
-  els.historyGrid.innerHTML = state.generationHistory.map(entry => `
-    <div class="history-item" data-id="${entry.id}">
+  els.historyGrid.innerHTML = historyItems.map(entry => `
+    <div class="history-item" data-id="${entry.id}" data-cloud="${entry.isCloud || false}">
       <img src="${entry.result}" alt="Generated artwork" loading="lazy">
       <div class="history-item-overlay">
         <span class="history-date">${new Date(entry.timestamp).toLocaleDateString()}</span>
@@ -530,11 +573,14 @@ function renderHistoryGrid() {
     </div>
   `).join('');
   
+  // Store items for click handler
+  const itemsMap = new Map(historyItems.map(e => [String(e.id), e]));
+  
   // Add click handlers
   els.historyGrid.querySelectorAll('.history-item').forEach(item => {
     item.addEventListener('click', () => {
-      const id = parseInt(item.dataset.id);
-      const entry = state.generationHistory.find(e => e.id === id);
+      const id = item.dataset.id;
+      const entry = itemsMap.get(id);
       if (entry) {
         els.resultImage.src = entry.result;
         els.resultImage.style.display = 'block';

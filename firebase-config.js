@@ -210,6 +210,87 @@ async function getSharedImage(shareId) {
   }
 }
 
+// ===== Cloud Generation History =====
+async function saveGenerationToCloud(sketchDataUrl, resultDataUrl, prompt, style) {
+  if (!currentUser) return null;
+  
+  try {
+    const genId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    
+    // Upload sketch and result to Storage
+    const sketchBlob = await (await fetch(sketchDataUrl)).blob();
+    const resultBlob = await (await fetch(resultDataUrl)).blob();
+    
+    const sketchRef = storage.ref(`users/${currentUser.uid}/generations/${genId}/sketch.png`);
+    const resultRef = storage.ref(`users/${currentUser.uid}/generations/${genId}/result.png`);
+    
+    const [sketchUpload, resultUpload] = await Promise.all([
+      sketchRef.put(sketchBlob),
+      resultRef.put(resultBlob)
+    ]);
+    
+    const [sketchUrl, resultUrl] = await Promise.all([
+      sketchUpload.ref.getDownloadURL(),
+      resultUpload.ref.getDownloadURL()
+    ]);
+    
+    // Save metadata to Firestore
+    const docRef = await db.collection('users').doc(currentUser.uid)
+      .collection('generations').add({
+        sketchUrl,
+        resultUrl,
+        prompt: prompt || '',
+        style: style || '',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    
+    return {
+      id: docRef.id,
+      sketchUrl,
+      resultUrl,
+      prompt,
+      style
+    };
+  } catch (err) {
+    console.error('Error saving generation to cloud:', err);
+    return null;
+  }
+}
+
+async function loadCloudHistory() {
+  if (!currentUser) return [];
+  
+  try {
+    const snapshot = await db.collection('users').doc(currentUser.uid)
+      .collection('generations')
+      .orderBy('createdAt', 'desc')
+      .limit(50)
+      .get();
+    
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      timestamp: doc.data().createdAt?.toDate?.()?.toISOString() || new Date().toISOString()
+    }));
+  } catch (err) {
+    console.error('Error loading cloud history:', err);
+    return [];
+  }
+}
+
+async function deleteCloudGeneration(generationId) {
+  if (!currentUser) return false;
+  
+  try {
+    await db.collection('users').doc(currentUser.uid)
+      .collection('generations').doc(generationId).delete();
+    return true;
+  } catch (err) {
+    console.error('Error deleting generation:', err);
+    return false;
+  }
+}
+
 // ===== UI Updates =====
 function updateAuthUI() {
   const authBtn = document.getElementById('authBtn');
