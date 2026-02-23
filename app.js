@@ -221,6 +221,7 @@ function selectTool(tool) {
 
 // ===== API Key Management =====
 function updateApiKeyStatus() {
+  if (!els.apiKeyStatus) return;
   if (state.apiKey) {
     const label = state.apiKeySource === 'env' ? 'Key (via .env)' : 'Key Set';
     els.apiKeyStatus.textContent = label;
@@ -232,6 +233,7 @@ function updateApiKeyStatus() {
 }
 
 function showApiKeyModal() {
+  if (!els.apiKeyModal || !els.apiKeyInput) return;
   // Don't pre-fill if key came from .env (show placeholder instead)
   els.apiKeyInput.value = state.apiKeySource === 'env' ? '' : state.apiKey;
   els.apiKeyInput.placeholder = state.apiKeySource === 'env'
@@ -242,6 +244,7 @@ function showApiKeyModal() {
 }
 
 function hideApiKeyModal() {
+  if (!els.apiKeyModal) return;
   els.apiKeyModal.classList.remove('active');
 }
 
@@ -871,20 +874,32 @@ function setupEvents() {
     els.nativeShareBtn.addEventListener('click', nativeShare);
   }
 
-  // API Key modal
-  els.apiKeyBtn.addEventListener('click', showApiKeyModal);
-  els.saveApiKey.addEventListener('click', saveApiKeyHandler);
-  els.cancelApiKey.addEventListener('click', hideApiKeyModal);
-  els.apiKeyModal.addEventListener('click', (e) => {
-    if (e.target === els.apiKeyModal) hideApiKeyModal();
-  });
-  els.apiKeyInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') saveApiKeyHandler();
-    if (e.key === 'Escape') hideApiKeyModal();
-  });
-  els.toggleKeyVisibility.addEventListener('click', () => {
-    els.apiKeyInput.type = els.apiKeyInput.type === 'password' ? 'text' : 'password';
-  });
+  // API Key modal (optional - may be removed from UI)
+  if (els.apiKeyBtn) {
+    els.apiKeyBtn.addEventListener('click', showApiKeyModal);
+  }
+  if (els.saveApiKey) {
+    els.saveApiKey.addEventListener('click', saveApiKeyHandler);
+  }
+  if (els.cancelApiKey) {
+    els.cancelApiKey.addEventListener('click', hideApiKeyModal);
+  }
+  if (els.apiKeyModal) {
+    els.apiKeyModal.addEventListener('click', (e) => {
+      if (e.target === els.apiKeyModal) hideApiKeyModal();
+    });
+  }
+  if (els.apiKeyInput) {
+    els.apiKeyInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') saveApiKeyHandler();
+      if (e.key === 'Escape') hideApiKeyModal();
+    });
+  }
+  if (els.toggleKeyVisibility) {
+    els.toggleKeyVisibility.addEventListener('click', () => {
+      els.apiKeyInput.type = els.apiKeyInput.type === 'password' ? 'text' : 'password';
+    });
+  }
 
   // Keyboard shortcuts
   document.addEventListener('keydown', (e) => {
