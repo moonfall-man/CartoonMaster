@@ -716,7 +716,7 @@ async function showShareModal() {
   if (typeof currentUser !== 'undefined' && currentUser) {
     els.sharePreview.innerHTML = `
       <img src="${currentShareImage}" alt="Share preview">
-      <div class="share-uploading">Uploading to cloud...</div>
+      <div class="share-uploading">Creating shareable link...</div>
     `;
     
     // Upload to Firebase and get shareable link
@@ -730,9 +730,10 @@ async function showShareModal() {
       els.sharePreview.innerHTML = `
         <img src="${currentShareImage}" alt="Share preview">
         <div class="share-link-container">
-          <input type="text" class="share-link-input" value="${currentShareUrl}" readonly id="shareLinkInput">
+          <input type="text" class="share-link-input" value="${currentShareUrl}" readonly id="shareLinkInput" onclick="this.select()">
           <button class="copy-link-btn" id="copyLinkBtn" title="Copy link">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copy Link
           </button>
         </div>
       `;
@@ -745,7 +746,7 @@ async function showShareModal() {
   } else {
     els.sharePreview.innerHTML = `
       <img src="${currentShareImage}" alt="Share preview">
-      <p class="share-signin-hint">Sign in to get a shareable link!</p>
+      <p class="share-signin-hint">✨ Sign in to get a shareable link!</p>
     `;
   }
   
