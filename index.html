@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sketch to Masterpiece</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="logo">
+        <svg class="logo-icon" viewBox="0 0 40 40" fill="none">
+          <rect width="40" height="40" rx="10" fill="url(#logoGrad)"/>
+          <path d="M12 28L16 14L20 22L24 16L28 28" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="20" cy="12" r="2" fill="white"/>
+          <defs>
+            <linearGradient id="logoGrad" x1="0" y1="0" x2="40" y2="40">
+              <stop stop-color="#8B5CF6"/>
+              <stop offset="1" stop-color="#EC4899"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <div>
+          <h1>Sketch to Masterpiece</h1>
+          <p class="subtitle">Draw anything. Let AI transform it into art.</p>
+        </div>
+      </div>
+      <div class="header-actions">
+      <button class="header-btn" id="historyBtn" title="View History">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        </svg>
+        <span>History</span>
+      </button>
+      <button class="api-key-btn" id="apiKeyBtn" title="Set API Key">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
+        </svg>
+        <span id="apiKeyStatus" class="key-status key-missing">API Key</span>
+      </button>
+      </div>
+    </header>
+
+    <!-- API Key Modal -->
+    <div class="modal-overlay" id="apiKeyModal">
+      <div class="modal">
+        <h2>Gemini API Key</h2>
+        <p>Enter your key below, or add it to a <code style="background:#1a1a2e;padding:2px 6px;border-radius:4px;font-size:0.85em;">.env</code> file in the project folder for automatic loading:</p>
+        <pre style="background:#0a0a0f;border:1px solid #2a2a3e;border-radius:8px;padding:10px 14px;font-size:0.82rem;color:#9898b0;margin-bottom:14px;overflow:auto;">GEMINI_API_KEY=your_key_here</pre>
+        <p style="margin-bottom:14px;">Get a free key at <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a>. Keys entered here are saved in your browser only.</p>
+        <div class="input-group">
+          <input type="password" id="apiKeyInput" placeholder="Enter your API key..." autocomplete="off">
+          <button class="toggle-visibility" id="toggleKeyVisibility">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-secondary" id="cancelApiKey">Cancel</button>
+          <button class="btn btn-primary" id="saveApiKey">Save Key</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- History Modal -->
+    <div class="modal-overlay" id="historyModal">
+      <div class="modal history-modal">
+        <div class="modal-header">
+          <h2>Generation History</h2>
+          <button class="icon-btn" id="closeHistory" title="Close">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <div class="history-grid" id="historyGrid"></div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="main">
+      <!-- Drawing Panel -->
+      <section class="panel drawing-panel">
+        <div class="panel-header">
+          <h2>Your Sketch</h2>
+          <div class="canvas-actions">
+            <button class="icon-btn" id="uploadBtn" title="Upload Image">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            </button>
+            <input type="file" id="uploadInput" accept="image/*" style="display:none;">
+            <div class="divider"></div>
+            <button class="icon-btn" id="undoBtn" title="Undo (Ctrl+Z)">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+            </button>
+            <button class="icon-btn" id="redoBtn" title="Redo (Ctrl+Y)">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            </button>
+            <div class="divider"></div>
+            <button class="icon-btn danger" id="clearBtn" title="Clear Canvas">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="canvas-container" id="canvasContainer">
+          <canvas id="drawingCanvas"></canvas>
+          <div class="canvas-placeholder" id="canvasPlaceholder">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.4">
+              <path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/>
+              <circle cx="11" cy="11" r="2"/>
+            </svg>
+            <span>Start drawing here...</span>
+          </div>
+        </div>
+
+        <!-- Drawing Tools -->
+        <div class="toolbar">
+          <div class="tool-group">
+            <button class="tool-btn active" id="penTool" data-tool="pen" title="Pen">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/></svg>
+            </button>
+            <button class="tool-btn" id="eraserTool" data-tool="eraser" title="Eraser">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20H7L3 16l9-9 8 8-4 4z"/><path d="M6.5 13.5L1 19"/></svg>
+            </button>
+          </div>
+
+          <div class="tool-group">
+            <label class="color-picker-wrapper" title="Brush Color">
+              <input type="color" id="colorPicker" value="#ffffff">
+              <span class="color-preview" id="colorPreview"></span>
+            </label>
+          </div>
+
+          <div class="tool-group slider-group">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.5"><circle cx="12" cy="12" r="3"/></svg>
+            <input type="range" id="brushSize" min="1" max="50" value="4" class="slider">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.5"><circle cx="12" cy="12" r="8"/></svg>
+            <span class="size-label" id="sizeLabel">4px</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Result Panel -->
+      <section class="panel result-panel">
+        <div class="panel-header">
+          <h2>Masterpiece</h2>
+          <button class="icon-btn" id="downloadBtn" title="Download" style="display:none;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          </button>
+        </div>
+
+        <div class="result-container" id="resultContainer">
+          <div class="result-shimmer" id="resultShimmer" style="display:none;">
+          <div class="shimmer-animation"></div>
+        </div>
+        <div class="result-placeholder" id="resultPlaceholder">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.4">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+            </svg>
+            <span>Your masterpiece will appear here</span>
+          </div>
+          <img id="resultImage" class="result-image" alt="Generated masterpiece" style="display:none;">
+          <div class="result-description" id="resultDescription" style="display:none;"></div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Bottom Controls -->
+    <footer class="controls">
+      <div class="style-presets" id="stylePresets"></div>
+      <div class="prompt-section">
+        <div class="prompt-input-wrapper">
+          <svg class="prompt-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          <input type="text" id="promptInput" placeholder="Describe the style... e.g. &quot;Techno, golden, in the jungle&quot;" autocomplete="off">
+        </div>
+        <button class="generate-btn" id="generateBtn">
+          <svg class="sparkle" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6L5.6 18.4"/></svg>
+          <span>Generate</span>
+        </button>
+      </div>
+
+      <!-- Loading State -->
+      <div class="loading-bar" id="loadingBar">
+        <div class="loading-progress"></div>
+        <div class="loading-content">
+          <span class="loading-text" id="loadingText">Analyzing your sketch...</span>
+          <span class="loading-timer" id="loadingTimer">0s</span>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
