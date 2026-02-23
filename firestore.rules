@@ -1,0 +1,23 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users collection - users can only read/write their own data
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Shared images - anyone can read, only authenticated users can create
+    match /shares/{shareId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null && request.auth.uid == resource.data.userId;
+    }
+    
+    // Credits/transactions - users can only read their own
+    match /credits/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      // Only server can write credits (via Cloud Functions later)
+      allow write: if false;
+    }
+  }
+}
