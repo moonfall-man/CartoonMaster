@@ -17,6 +17,7 @@ const state = {
   timerInterval: null,
   selectedStyle: null,
   generationHistory: JSON.parse(localStorage.getItem('generation_history') || '[]'),
+  currentSketch: null, // Stores sketch URL for sharing (from history or current canvas)
 };
 
 // Gemini model to use — gemini-2.5-flash-image is the stable image gen model
@@ -448,6 +449,9 @@ async function generateMasterpiece() {
       els.resultDescription.style.display = 'none';
     }
 
+    // Clear any stored sketch from history - use current canvas for this generation
+    state.currentSketch = null;
+    
     // Save to history
     saveToGenerationHistory(canvasDataUrl, `data:${imageMime};base64,${imageBase64}`, userKeywords);
     
@@ -592,6 +596,8 @@ async function renderHistoryGrid() {
       const id = item.dataset.id;
       const entry = itemsMap.get(id);
       if (entry) {
+        // Store the sketch from history for sharing
+        state.currentSketch = entry.sketch;
         els.resultImage.src = entry.result;
         els.resultImage.style.display = 'block';
         els.resultPlaceholder.style.display = 'none';
@@ -708,7 +714,8 @@ let currentShareImage = null;
 
 function generateShareImage() {
   return new Promise((resolve, reject) => {
-    const sketchDataUrl = canvas.toDataURL('image/png');
+    // Use saved sketch from history if available, otherwise use current canvas
+    const sketchDataUrl = state.currentSketch || canvas.toDataURL('image/png');
     const resultDataUrl = els.resultImage.src;
     
     const sketchImg = new Image();
