@@ -1,3 +1,3 @@
-write-host "Testing review functionality..."
+Write-Host "Testing review functionality..."
 $password = "123"
-write-host "Password: $password"
+Write-Host "Password: $password"
